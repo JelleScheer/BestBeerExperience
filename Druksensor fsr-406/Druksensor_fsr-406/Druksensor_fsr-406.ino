@@ -5,17 +5,31 @@
 // 8-rs
 // 9-e
 // 10~13 - d4~d7
+
+// Druksensor aangesloten op analoogpin 0
+
 LiquidCrystal lcd(8,9,10,11,12,13);
+
+int druksensorreading = 0;
 
 void setup() {
 // set up the LCD’s number of columns and rows:
 lcd.begin(16,2);
-// Print a message to the LCD.
+
 }
 void loop() {
-// set the cursor to column 0, line 1
-// (note: line 1 is the second row, since counting begins with 0):
-lcd.setCursor(0, 1);
-// print the number of seconds since reset:
-}
 
+druksensorreading = analogRead(0);
+ 
+lcd.setCursor(0, 0);
+lcd.print(druksensorreading);
+
+lcd.setCursor(0, 1);
+
+if(druksensorreading < 850 ){
+    lcd.print("Glas leeg!      ");
+}
+else{
+    lcd.print("Glas vol        ");
+}
+}
