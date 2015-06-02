@@ -23,10 +23,11 @@ druksensorreading = analogRead(0);
  
 lcd.setCursor(0, 0);
 lcd.print(druksensorreading);
+lcd.print("    ");
 
 lcd.setCursor(0, 1);
 
-if(druksensorreading < 850 ){
+if(druksensorreading < 780 ){
     lcd.print("Glas leeg!      ");
 }
 else{
