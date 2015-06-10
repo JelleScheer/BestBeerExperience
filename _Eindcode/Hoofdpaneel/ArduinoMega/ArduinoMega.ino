@@ -45,7 +45,21 @@ void loop(void)
     {
         Serial.println(theMessage);
         lcd.clear();
-        lcd.print(theMessage);
+        if(theMessage.endsWith("t"))
+        {
+          
+          theMessage.remove(theMessage.length() -1);
+          lcd.print("Celcius: " + theMessage);
+        }
+        else if(theMessage.endsWith("d"))
+        {
+          theMessage.remove(theMessage.length() -1);
+          lcd.print("Druk: " + theMessage); 
+        }
+        else
+        {
+          lcd.print("Onbekende data, ruis?");
+        }
       
       theMessage= "";
     }
