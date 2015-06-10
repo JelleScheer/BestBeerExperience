@@ -37,15 +37,12 @@ void setup(void)
 
 void loop(void)
 {
-  
   if(wisseldata){
-    // call sensors.requestTemperatures() to issue a global temperature
-    // request to all devices on the bus
     sensors.requestTemperatures(); // Send the command to get temperatures
-    sendStringToHoofdpaneel("temp" + String(sensors.getTempCByIndex(0)));
+    sendStringToHoofdpaneel("t" + String(sensors.getTempCByIndex(0)));
   }
   else{
-    sendStringToHoofdpaneel("druk" + String(analogRead(DRUKSENSORPINPUT))); 
+    sendStringToHoofdpaneel("d" + String(analogRead(DRUKSENSORPINPUT))); 
   }
   
   wisseldata = !wisseldata;
