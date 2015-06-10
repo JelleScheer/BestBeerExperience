@@ -39,10 +39,10 @@ void loop(void)
 {
   if(wisseldata){
     sensors.requestTemperatures(); // Send the command to get temperatures
-    sendStringToHoofdpaneel("t" + String(sensors.getTempCByIndex(0)));
+    sendStringToHoofdpaneel(String(sensors.getTempCByIndex(0)) + "t");
   }
   else{
-    sendStringToHoofdpaneel("d" + String(analogRead(DRUKSENSORPINPUT))); 
+    sendStringToHoofdpaneel(String(analogRead(DRUKSENSORPINPUT)) + "d"); 
   }
   
   wisseldata = !wisseldata;
