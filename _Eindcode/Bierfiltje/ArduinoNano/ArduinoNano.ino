@@ -9,6 +9,9 @@
 // Data wire is plugged into pin 2 on the Arduino
 #define ONE_WIRE_BUS 2
 
+// Define druksensor analoog pin
+#define DRUKSENSORPINPUT 0
+
 // Setup a oneWire instance to communicate with any OneWire devices
 // (not just Maxim/Dallas temperature ICs)
 OneWire oneWire(ONE_WIRE_BUS);
@@ -20,6 +23,7 @@ int msg[1];
 RF24 radio(9, 10);
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 
+boolean wisseldata = false;
 
 void setup(void)
 {
@@ -33,19 +37,28 @@ void setup(void)
 
 void loop(void)
 {
-  // call sensors.requestTemperatures() to issue a global temperature
-  // request to all devices on the bus
-  sensors.requestTemperatures(); // Send the command to get temperatures
+  
+  if(wisseldata){
+    // call sensors.requestTemperatures() to issue a global temperature
+    // request to all devices on the bus
+    sensors.requestTemperatures(); // Send the command to get temperatures
+    sendStringToHoofdpaneel("temp" + String(sensors.getTempCByIndex(0)));
+  }
+  else{
+    sendStringToHoofdpaneel("druk" + String(analogRead(DRUKSENSORPINPUT))); 
+  }
+  
+  wisseldata = !wisseldata;
+}
 
-  String theMessage = String(sensors.getTempCByIndex(0)); 
-  int messageSize = theMessage.length();
+void sendStringToHoofdpaneel(String message){
 
-  for (int i = 0; i < messageSize; i++)
+  for (int i = 0; i < message.length(); i++)
   {
     int charToSend[1];
-    charToSend[0] = theMessage.charAt(i);
+    charToSend[0] = message.charAt(i);
     radio.write(charToSend, 1);
-    Serial.print(theMessage.charAt(i));
+    Serial.print(message.charAt(i));
   }
   Serial.println("");
   
