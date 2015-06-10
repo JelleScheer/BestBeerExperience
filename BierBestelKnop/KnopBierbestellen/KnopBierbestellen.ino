@@ -5,8 +5,8 @@ void setup() {
   Serial.begin(9600);
   
   // put your setup code here, to run once:
-  pinMode(2, INPUT);	   // Pin 2 is input to which a switch is connected = INT0
-  attachInterrupt(0, bestelBier, RISING);
+  pinMode(18, INPUT);	   // Pin 18 is input to which a switch is connected = INT0
+  attachInterrupt(5, bestelBier, RISING);
 }
 
 void loop() {
