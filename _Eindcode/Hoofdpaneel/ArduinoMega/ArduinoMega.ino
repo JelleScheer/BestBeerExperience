@@ -17,7 +17,11 @@ const uint64_t pipe = 0xE8E8F0F0E1LL;
 int lastmsg = 1;
 String theMessage = "";
 
-LiquidCrystal lcd(8,9,10,11,12,13);
+// Initializeer de lcd scherm met de juiste output porten
+// 31-rs
+// 30-e
+// 32~35 - d4~d7
+LiquidCrystal lcd(31,30,32,33,34,35);
 
 void setup(void)
 {

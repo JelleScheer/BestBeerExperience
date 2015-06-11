@@ -6,7 +6,7 @@
 // 9-e
 // 10~13 - d4~d7
 //LiquidCrystal lcd(8,9,10,11,12,13);
-LiquidCrystal lcd(52,50,48,46,44,42);
+LiquidCrystal lcd(31,30,32,33,34,35);
 
 void setup() {
 // set up the LCD’s number of columns and rows:
