@@ -6,11 +6,19 @@
 #include <DallasTemperature.h>
 #include<stdlib.h>
 
+// include neopixel library:
+#include <Adafruit_NeoPixel.h>
+#include <avr/power.h>
+
 // Data wire is plugged into pin 2 on the Arduino
 #define ONE_WIRE_BUS 2
 
 // Define druksensor analoog pin
 #define DRUKSENSORPINPUT 0
+
+// Define NeoPixel requirements
+#define PIN            6
+#define NUMPIXELS      30
 
 // Setup a oneWire instance to communicate with any OneWire devices
 // (not just Maxim/Dallas temperature ICs)
@@ -18,6 +26,10 @@ OneWire oneWire(ONE_WIRE_BUS);
 
 // Pass our oneWire reference to Dallas Temperature.
 DallasTemperature sensors(&oneWire);
+
+// Initialise RGBStrip
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800); 
+int delayval = 1; // delay for half a second
 
 int msg[1];
 RF24 radio(9, 10);
@@ -33,6 +45,9 @@ void setup(void)
 
   // Start up the temperature library
   sensors.begin();
+  
+  // Start up RGBStrip
+  pixels.begin();
 }
 
 void loop(void)
@@ -43,6 +58,32 @@ void loop(void)
   }
   else{
     sendStringToHoofdpaneel(String(analogRead(DRUKSENSORPINPUT)) + "d"); 
+<<<<<<< HEAD
+=======
+  }
+  
+  // use gathered temperature to select the right colour
+  for(int i=0;i<NUMPIXELS;i++)
+  {
+    if(sensors.getTempCByIndex(0) < 10)
+    {
+      pixels.setPixelColor(i, pixels.Color(101,211,245)); // Green
+      pixels.show();
+      delay(delayval);
+    }
+    else if(sensors.getTempCByIndex(0) > 10 && sensors.getTempCByIndex(0) < 15)
+    {
+      pixels.setPixelColor(i, pixels.Color(229,144,32)); // Orange
+      pixels.show();
+      delay(delayval);
+    }
+    else 
+    {
+      pixels.setPixelColor(i, pixels.Color(201,68,28)); // Red
+      pixels.show();
+      delay(delayval);
+    }
+>>>>>>> origin/master
   }
   
   wisseldata = !wisseldata;
