@@ -6,6 +6,9 @@
 #include <DallasTemperature.h>
 #include<stdlib.h>
 
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
+
 // include neopixel library:
 #include <Adafruit_NeoPixel.h>
 #include <avr/power.h>
@@ -50,6 +53,7 @@ void setup(void)
   // Start up RGBStrip
   strip.begin();
   strip.show();
+  rainbow(20);
 }
 
 void loop(void)
@@ -64,17 +68,26 @@ void loop(void)
   
   if(checkColor == 5)
   {
+    //SLAAPMODUS
+    //if(analogRead(DRUKSENSORPINPUT) > 500)
+    //  {
+    //    colorWipe(strip.Color(0, 0, 255), 50); //Blue
+    //    delay(1000);
+    //    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    //    sleep_enable();
+    //    sleep_mode();
+    //  }
     if(sensors.getTempCByIndex(0) < 10)
       {
         colorWipe(strip.Color(0, 0, 255), 50); //Blue
       }
       else if(sensors.getTempCByIndex(0) > 10 && sensors.getTempCByIndex(0) < 15)
       {
-        colorWipe(strip.Color(0, 255, 0), 50); // Orange
+        colorWipe(strip.Color(227, 145, 14), 50); // Orange
       }
       else 
       {
-        colorWipe (strip.Color(201,68,28), 50); // Red
+        colorWipe (strip.Color(194,13,10), 50); // Red
       }
       
       checkColor = 0;
@@ -89,6 +102,31 @@ void colorWipe(uint32_t c, uint8_t) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
       strip.show();
+  }
+}
+
+void rainbow(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256; j++) {
+    for(i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel((i+j) & 255));
+    }
+    strip.show();
+    delay(wait);
+  }
+}
+
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+   return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  } else if(WheelPos < 170) {
+    WheelPos -= 85;
+   return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  } else {
+   WheelPos -= 170;
+   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
   }
 }
 
