@@ -6,6 +6,9 @@
 #include <DallasTemperature.h>
 #include<stdlib.h>
 
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
+
 // include neopixel library:
 #include <Adafruit_NeoPixel.h>
 #include <avr/power.h>
@@ -17,8 +20,8 @@
 #define DRUKSENSORPINPUT 0
 
 // Define NeoPixel requirements
-#define PIN            6
-#define NUMPIXELS      30
+#define PIXEL_PIN      6
+#define PIXEL_COUNT    30
 
 // Setup a oneWire instance to communicate with any OneWire devices
 // (not just Maxim/Dallas temperature ICs)
@@ -28,12 +31,13 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // Initialise RGBStrip
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800); 
-int delayval = 1; // delay for half a second
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 int msg[1];
 RF24 radio(9, 10);
 const uint64_t pipe = 0xE8E8F0F0E1LL;
+
+int checkColor = 0;
 
 boolean wisseldata = false;
 
@@ -47,7 +51,9 @@ void setup(void)
   sensors.begin();
   
   // Start up RGBStrip
-  pixels.begin();
+  strip.begin();
+  strip.show();
+  rainbow(20);
 }
 
 void loop(void)
@@ -62,31 +68,72 @@ void loop(void)
 =======
   }
   
-  // use gathered temperature to select the right colour
-  for(int i=0;i<NUMPIXELS;i++)
+  if(checkColor == 5)
   {
+    //SLAAPMODUS
+    //if(analogRead(DRUKSENSORPINPUT) > 500)
+    //  {
+    //    colorWipe(strip.Color(0, 0, 255), 50); //Blue
+    //    delay(1000);
+    //    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    //    sleep_enable();
+    //    sleep_mode();
+    //  }
     if(sensors.getTempCByIndex(0) < 10)
-    {
-      pixels.setPixelColor(i, pixels.Color(101,211,245)); // Green
-      pixels.show();
-      delay(delayval);
+      {
+        colorWipe(strip.Color(0, 0, 255), 50); //Blue
+      }
+      else if(sensors.getTempCByIndex(0) > 10 && sensors.getTempCByIndex(0) < 15)
+      {
+        colorWipe(strip.Color(227, 145, 14), 50); // Orange
+      }
+      else 
+      {
+        colorWipe (strip.Color(194,13,10), 50); // Red
+      }
+      
+      checkColor = 0;
+  }
+    
+    checkColor = checkColor + 1;
+    
+    wisseldata = !wisseldata;
+}
+
+void colorWipe(uint32_t c, uint8_t) {
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, c);
+      strip.show();
+  }
+}
+
+void rainbow(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256; j++) {
+    for(i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel((i+j) & 255));
     }
-    else if(sensors.getTempCByIndex(0) > 10 && sensors.getTempCByIndex(0) < 15)
-    {
-      pixels.setPixelColor(i, pixels.Color(229,144,32)); // Orange
-      pixels.show();
-      delay(delayval);
-    }
-    else 
-    {
-      pixels.setPixelColor(i, pixels.Color(201,68,28)); // Red
-      pixels.show();
-      delay(delayval);
-    }
+<<<<<<< HEAD
+>>>>>>> origin/master
+=======
+    strip.show();
+    delay(wait);
+  }
+}
+
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+   return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  } else if(WheelPos < 170) {
+    WheelPos -= 85;
+   return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  } else {
+   WheelPos -= 170;
+   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 >>>>>>> origin/master
   }
-  
-  wisseldata = !wisseldata;
 }
 
 void sendStringToHoofdpaneel(String message){
