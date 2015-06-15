@@ -11,7 +11,7 @@ prints the complete message and clears the message buffer.
 */
 
 int msg[1];
-RF24 radio(53, 48);
+RF24 radio(9, 10);
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 int lastmsg = 1;
 String theMessage = "";
