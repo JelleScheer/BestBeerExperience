@@ -33,6 +33,16 @@ DallasTemperature sensors(&oneWire);
 // Initialise RGBStrip
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
+/* Radio pinnen Mega
+ * CSN - D10
+ * MI - D12
+ * MO - D11
+ * SCK - D13
+ * CE - D9
+ * VCC - 3.3V
+ * IRQ - niet gebruikt
+ */
+
 int msg[1];
 RF24 radio(9, 10);
 const uint64_t pipe = 0xE8E8F0F0E1LL;

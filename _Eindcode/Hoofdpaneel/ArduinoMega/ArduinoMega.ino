@@ -23,6 +23,16 @@ String theMessage = "";
 // 32~35 - d4~d7
 LiquidCrystal lcd(31, 30, 32, 33, 34, 35);
 
+/* Radio pinnen Mega
+ * CSM - 48
+ * MI - 50
+ * MO - 51
+ * SCK - 52
+ * CE - 53
+ * VCC - 3.3V
+ * IRQ - niet gebruikt
+ */
+ 
 void setup(void)
 {
   Serial.begin(9600);
@@ -39,7 +49,6 @@ void setup(void)
   //Interrupts toevoegen aan de knoppen
   attachInterrupt(0, systeemAan, RISING);
   attachInterrupt(1, systeemUit, RISING);
-
 }
 
 void loop(void)

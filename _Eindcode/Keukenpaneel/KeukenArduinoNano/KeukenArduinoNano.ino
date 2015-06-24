@@ -16,6 +16,16 @@ const uint64_t pipe = 0xE8E8F0F0E1LL;
 int lastmsg = 1;
 String theMessage = "";
 
+/* Radio pinnen Mega
+ * CSN - D10
+ * MI - D12
+ * MO - D11
+ * SCK - D13
+ * CE - D9
+ * VCC - 3.3V
+ * IRQ - niet gebruikt
+ */
+
 void setup(void)
 {
   Serial.begin(9600);
