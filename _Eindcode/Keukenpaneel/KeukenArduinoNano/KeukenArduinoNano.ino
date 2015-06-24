@@ -26,8 +26,17 @@ String theMessage = "";
  * IRQ - niet gebruikt
  */
 
+int ledNET = 3;
+int ledBESTEL = 4;
+boolean ledon = 0;
+
 void setup(void)
 {
+  pinMode(ledNET, OUTPUT);
+  pinMode(ledBESTEL, OUTPUT);
+  digitalWrite(3, LOW);
+  digitalWrite(4, LOW);
+  
   Serial.begin(9600);
   radio.begin();
   radio.openReadingPipe(1, pipe);
@@ -38,6 +47,8 @@ void loop(void)
 {
   if (radio.available())
   {
+    //Network status led on
+    digitalWrite(3, HIGH);
     bool done = false;
     done = radio.read(msg, 1);
     char theChar = msg[0];
@@ -50,17 +61,18 @@ void loop(void)
     {
       Serial.println(theMessage);
       
-      if (theMessage.endsWith("lon"))
+      if (theMessage.endsWith("on"))
       {
-        theMessage.remove(theMessage.length() - 3);
-        
-        //Led aan
-      }
-      else if (theMessage.endsWith("loff"))
-      {
-        theMessage.remove(theMessage.length() - 4);
-        
-        //Led uit
+        if (ledon == 0)
+        {
+          digitalWrite(4, HIGH);
+          ledon = 1;
+        }
+        else if (ledon == 1)
+        {
+          digitalWrite(4, LOW);
+          ledon = 0; 
+        }
       }
 
       theMessage = "";

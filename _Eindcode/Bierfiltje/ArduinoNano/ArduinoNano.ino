@@ -74,8 +74,6 @@ void loop(void)
   }
   else{
     sendStringToHoofdpaneel(String(analogRead(DRUKSENSORPINPUT)) + "d"); 
-<<<<<<< HEAD
-=======
   }
   
   if(checkColor == 5)
@@ -124,9 +122,6 @@ void rainbow(uint8_t wait) {
     for(i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel((i+j) & 255));
     }
-<<<<<<< HEAD
->>>>>>> origin/master
-=======
     strip.show();
     delay(wait);
   }
@@ -142,7 +137,6 @@ uint32_t Wheel(byte WheelPos) {
   } else {
    WheelPos -= 170;
    return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
->>>>>>> origin/master
   }
 }
 

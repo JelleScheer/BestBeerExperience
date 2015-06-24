@@ -16,6 +16,8 @@ RF24 radio(53, 48);
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 int lastmsg = 1;
 String theMessage = "";
+boolean writing = 0;
+boolean verstuurBierBestelling = 0;
 
 // Initializeer de lcd scherm met de juiste output porten
 // 31-rs
@@ -39,22 +41,30 @@ void setup(void)
   radio.begin();
   radio.openReadingPipe(1, pipe);
   radio.startListening();
+  
   lcd.begin(16, 2);
   lcd.setCursor(0, 0);
-
+  
   // Init knoppen als input
   pinMode(2, INPUT);	   // Pin 2 is input to which a switch is connected = INT0
-  pinMode(3, INPUT);	   // Pin 3 is input to which a switch is connected = INT0
+  pinMode(3, INPUT);	   // Pin 3 is input to which a switch is connected = INT1
+  pinMode(21, INPUT);        //Pin 21 is input to which a switch is connected = INT2
 
   //Interrupts toevoegen aan de knoppen
   attachInterrupt(0, systeemAan, RISING);
   attachInterrupt(1, systeemUit, RISING);
+  attachInterrupt(2, bierBestel, RISING);
 }
 
 void loop(void)
 {
-  if (radio.available())
-  {
+    if (writing == 1)
+    {
+        radio.openReadingPipe(1, pipe);
+        radio.startListening();
+        writing = 0;
+    }
+    Serial.println("Reading!");
     bool done = false;
     done = radio.read(msg, 1);
     char theChar = msg[0];
@@ -85,7 +95,40 @@ void loop(void)
 
       theMessage = "";
     }
+    
+      Serial.println("Switching to writing..");
+      delay(1000);
+    
+      radio.openWritingPipe(pipe);
+      writing = 1;
+      Serial.println("Writing!");
+        sendStringToHoofdpaneel(String("lon"));
+}
+
+void sendStringToHoofdpaneel(String message){
+
+  for (int i = 0; i < message.length(); i++)
+  {
+    int charToSend[1];
+    charToSend[0] = message.charAt(i);
+    radio.write(charToSend, 1);
+    Serial.print(message.charAt(i));
   }
+  Serial.println("");
+  
+  //send the 'terminate string' value...
+  msg[0] = 2;
+  radio.write(msg, 1);
+
+  /*delay sending for a short period of time.  radio.powerDown()/radio.powerupp
+  //with a delay in between have worked well for this purpose(just using delay seems to
+  //interrupt the transmission start). However, this method could still be improved
+  as I still get the first character 'cut-off' sometimes. I have a 'checksum' function
+  on the receiver to verify the message was successfully sent.
+  */
+  radio.powerDown();
+  delay(1000);
+  radio.powerUp();
 }
 
 void systeemAan() {
@@ -94,4 +137,8 @@ void systeemAan() {
 
 void systeemUit() {
   Serial.println("UIT");
+}
+
+void bierBestel() {
+  verstuurBierBestelling = true;
 }
