@@ -16,8 +16,7 @@ RF24 radio(53, 48);
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 int lastmsg = 1;
 String theMessage = "";
-boolean writing = 0;
-boolean verstuurBierBestelling = 0;
+boolean verstuurBierBestelling = false;
 
 // Initializeer de lcd scherm met de juiste output porten
 // 31-rs
@@ -41,13 +40,12 @@ void setup(void)
   radio.begin();
   radio.openReadingPipe(1, pipe);
   radio.startListening();
-  
   lcd.begin(16, 2);
   lcd.setCursor(0, 0);
-  
+
   // Init knoppen als input
   pinMode(2, INPUT);	   // Pin 2 is input to which a switch is connected = INT0
-  pinMode(3, INPUT);	   // Pin 3 is input to which a switch is connected = INT1
+  pinMode(3, INPUT);	   // Pin 3 is input to which a switch is connected = INT0
   pinMode(21, INPUT);        //Pin 21 is input to which a switch is connected = INT2
 
   //Interrupts toevoegen aan de knoppen
@@ -58,13 +56,11 @@ void setup(void)
 
 void loop(void)
 {
-    if (writing == 1)
+    if (radio.available())
     {
-        radio.openReadingPipe(1, pipe);
-        radio.startListening();
-        writing = 0;
-    }
-    Serial.println("Reading!");
+    radio.openReadingPipe(1, pipe);
+     radio.startListening();
+    
     bool done = false;
     done = radio.read(msg, 1);
     char theChar = msg[0];
@@ -96,13 +92,21 @@ void loop(void)
       theMessage = "";
     }
     
-      Serial.println("Switching to writing..");
-      delay(1000);
-    
-      radio.openWritingPipe(pipe);
-      writing = 1;
-      Serial.println("Writing!");
+      if(verstuurBierBestelling == true)
+      {
+        radio.openWritingPipe(pipe);
+        sendStringToHoofdpaneel(String("go"));
+  
+        Serial.println("Writing!");
+  
+        verstuurBierBestelling = false;
+          
         sendStringToHoofdpaneel(String("lon"));
+          
+        radio.openReadingPipe(1, pipe);
+        radio.startListening();  
+      }
+   }
 }
 
 void sendStringToHoofdpaneel(String message){
@@ -140,5 +144,5 @@ void systeemUit() {
 }
 
 void bierBestel() {
-  verstuurBierBestelling = true;
+    verstuurBierBestelling = true; 
 }
