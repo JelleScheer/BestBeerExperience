@@ -68,8 +68,6 @@ void loop(void)
   }
   else{
     sendStringToHoofdpaneel(String(analogRead(DRUKSENSORPINPUT)) + "d"); 
-<<<<<<< HEAD
-=======
   }
   
   // use gathered temperature to select the right colour
@@ -93,7 +91,6 @@ void loop(void)
       pixels.show();
       delay(delayval);
     }
->>>>>>> origin/master
   }
   
   wisseldata = !wisseldata;

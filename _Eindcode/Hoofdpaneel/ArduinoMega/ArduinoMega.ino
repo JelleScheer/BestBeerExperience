@@ -24,7 +24,7 @@ String theMessage = "";
 LiquidCrystal lcd(31, 30, 32, 33, 34, 35);
 
 /* Radio pinnen Mega
- * CSM - 48
+ * CSN - 48
  * MI - 50
  * MO - 51
  * SCK - 52
