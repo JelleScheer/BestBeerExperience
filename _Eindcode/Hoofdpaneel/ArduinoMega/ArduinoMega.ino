@@ -47,6 +47,10 @@ void setup(void)
   //Begin LCD scherm
   lcd.begin(16, 2);
   lcd.setCursor(0, 0);
+  lcd.print("Best Beer");
+  lcd.setCursor(0, 1); 
+  lcd.print("Experience");
+  lcd.setCursor(0, 0); 
 
   // Init knoppen als input
   pinMode(2, INPUT_PULLUP);	   // Pin 2 aanknop
@@ -71,6 +75,9 @@ void loop(void)
       
       lcdUitMessageDisplayed = false;
       lcd.clear();
+      lcd.print("Connectie maken");
+      lcd.setCursor(0, 1); 
+      lcd.print("Even geduld...");
     }
     
     //Als er een radio verbinding aanwezig is
@@ -146,9 +153,9 @@ void loop(void)
     //Laat standaard bericht op LCD scherm zien
     if (!lcdUitMessageDisplayed) {
       lcd.clear();
-      lcd.print("Turn on for");
-      lcd.setCursor(0, 2);
-      lcd.print("Best Beer Experience");
+      lcd.print("Turn on for Best");
+      lcd.setCursor(0, 1);
+      lcd.print("Beer Experience");
 
       lcdUitMessageDisplayed = true;
       
@@ -164,7 +171,7 @@ void loop(void)
 }
 
 void sendStringToHoofdpaneel(String message) {
-
+ 
   //Haal de message op die verstuurd moet worden, en converteer deze
   for (int i = 0; i < message.length(); i++)
   {
