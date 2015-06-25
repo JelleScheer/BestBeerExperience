@@ -33,7 +33,14 @@ LiquidCrystal lcd(31, 30, 32, 33, 34, 35);
  * VCC - 3.3V
  * IRQ - niet gebruikt
  */
- 
+
+//Bool systeem status
+boolean systeemIsAan = true;
+
+boolean lcdUitMessageDisplayed = false;
+
+
+
 void setup(void)
 {
   Serial.begin(9600);
@@ -44,72 +51,96 @@ void setup(void)
   lcd.setCursor(0, 0);
 
   // Init knoppen als input
-  pinMode(2, INPUT);	   // Pin 2 is input to which a switch is connected = INT0
-  pinMode(3, INPUT);	   // Pin 3 is input to which a switch is connected = INT0
-  pinMode(21, INPUT);        //Pin 21 is input to which a switch is connected = INT2
+  pinMode(2, INPUT_PULLUP);	   // Pin 2 is input to which a switch is connected = INT0
+  pinMode(3, INPUT_PULLUP);	   // Pin 3 is input to which a switch is connected = INT0
+  pinMode(21, INPUT_PULLUP);      //Pin 21 is input to which a switch is connected = INT2
 
   //Interrupts toevoegen aan de knoppen
-  attachInterrupt(0, systeemAan, RISING);
-  attachInterrupt(1, systeemUit, RISING);
-  attachInterrupt(2, bierBestel, RISING);
+  attachInterrupt(0, systeemAan, FALLING );
+  attachInterrupt(1, systeemUit, FALLING );
+  attachInterrupt(2, bierBestel, FALLING );
 }
 
 void loop(void)
 {
+  if (systeemIsAan) {
+    if (lcdUitMessageDisplayed) {
+      lcdUitMessageDisplayed = false;
+      lcd.clear();
+    }
+
     if (radio.available())
     {
-    radio.openReadingPipe(1, pipe);
-     radio.startListening();
-    
-    bool done = false;
-    done = radio.read(msg, 1);
-    char theChar = msg[0];
+      radio.openReadingPipe(1, pipe);
+      radio.startListening();
 
-    if (msg[0] != 2)
-    {
-      theMessage.concat(theChar);
-    }
-    else
-    {
-      Serial.println(theMessage);
-      lcd.clear();
-      if (theMessage.endsWith("t"))
-      {
+      bool done = false;
+      done = radio.read(msg, 1);
+      char theChar = msg[0];
 
-        theMessage.remove(theMessage.length() - 1);
-        lcd.print("Celcius: " + theMessage);
-      }
-      else if (theMessage.endsWith("d"))
+      if (msg[0] != 2)
       {
-        theMessage.remove(theMessage.length() - 1);
-        lcd.print("Druk: " + theMessage);
+        theMessage.concat(theChar);
       }
       else
       {
-        lcd.print("Onbekende data, ruis?");
-      }
+        Serial.println(theMessage);
+        lcd.clear();
+        if (theMessage.endsWith("t"))
+        {
 
-      theMessage = "";
-    }
-    
-      if(verstuurBierBestelling == true)
-      {
-        radio.openWritingPipe(pipe);
-        sendStringToHoofdpaneel(String("go"));
-  
-        Serial.println("Writing!");
-  
-        verstuurBierBestelling = false;
-          
-        sendStringToHoofdpaneel(String("lon"));
-          
-        radio.openReadingPipe(1, pipe);
-        radio.startListening();  
+          theMessage.remove(theMessage.length() - 1);
+          lcd.print("Celcius: " + theMessage);
+        }
+        else if (theMessage.endsWith("d"))
+        {
+          theMessage.remove(theMessage.length() - 1);
+          lcd.print("Druk: " + theMessage);
+        }
+        else
+        {
+          lcd.print("Onbekende data, ruis?");
+        }
+
+        theMessage = "";
       }
-   }
+    }
+    if (verstuurBierBestelling == true)
+    {
+      radio.openWritingPipe(pipe);
+
+      Serial.println("Writing!");
+
+      verstuurBierBestelling = false;
+
+      sendStringToHoofdpaneel(String("lon"));
+
+      radio.openReadingPipe(1, pipe);
+      radio.startListening();
+    }
+  }
+  else {
+    if (!lcdUitMessageDisplayed) {
+      lcd.clear();
+      lcd.print("Turn on for");
+      lcd.setCursor(0, 2);
+      lcd.print("Best Beer Experience");
+
+      lcdUitMessageDisplayed = true;
+      
+      radio.openWritingPipe(pipe);
+      sendStringToHoofdpaneel("suit");
+      radio.openReadingPipe(1, pipe);
+      radio.startListening();
+    }
+
+    delay(1000);
+  }
+
+
 }
 
-void sendStringToHoofdpaneel(String message){
+void sendStringToHoofdpaneel(String message) {
 
   for (int i = 0; i < message.length(); i++)
   {
@@ -119,7 +150,7 @@ void sendStringToHoofdpaneel(String message){
     Serial.print(message.charAt(i));
   }
   Serial.println("");
-  
+
   //send the 'terminate string' value...
   msg[0] = 2;
   radio.write(msg, 1);
@@ -136,13 +167,15 @@ void sendStringToHoofdpaneel(String message){
 }
 
 void systeemAan() {
+  systeemIsAan = true;
+
   Serial.println("AAN");
 }
 
 void systeemUit() {
-  Serial.println("UIT");
+  systeemIsAan = false;
 }
 
 void bierBestel() {
-    verstuurBierBestelling = true; 
+  verstuurBierBestelling = true;
 }
