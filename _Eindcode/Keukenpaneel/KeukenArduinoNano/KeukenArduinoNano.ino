@@ -3,20 +3,14 @@
 #include <RF24_config.h>
 #include <SPI.h>
 
-/*
-This sketch receives strings from sending unit via nrf24
-and prints them out via serial.  The sketch waits until
-it receives a specific value (2 in this case), then it
-prints the complete message and clears the message buffer.
-*/
-
+//Initialiseer de radio chip
 int msg[1];
 RF24 radio(9, 10);
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 int lastmsg = 1;
 String theMessage = "";
 
-/* Radio pinnen Mega
+/* Radio pinnen NANO Keuken
  * CSN - D10
  * MI - D12
  * MO - D11
@@ -26,43 +20,81 @@ String theMessage = "";
  * IRQ - niet gebruikt
  */
 
+//led om netwerk verbinding aan te geven
+int ledNET = 3;
+
+//led om bier bestelling aan te geven
+int ledBESTEL = 4;
+boolean ledon = 0;
+
 void setup(void)
 {
+  //Maak poort 3 en 4 output en zet de LEDs op laag
+  pinMode(ledNET, OUTPUT);
+  pinMode(ledBESTEL, OUTPUT);
+  digitalWrite(3, LOW);
+  digitalWrite(4, LOW);
+  
+  //Begin radio signaal op baudrate 9600
   Serial.begin(9600);
   radio.begin();
+  
+  //Zet de radio op receiving
   radio.openReadingPipe(1, pipe);
   radio.startListening();
 }
 
 void loop(void)
 {
+  //Als er een radio verbinding beschikbaar is
   if (radio.available())
   {
+    //Zet ledNET op hoog om verbinding aan te geven
+    digitalWrite(3, HIGH);
     bool done = false;
+    //Lees de opgehaalde message
     done = radio.read(msg, 1);
     char theChar = msg[0];
 
+    //Initialisatie message
     if (msg[0] != 2)
     {
       theMessage.concat(theChar);
     }
     else
     {
+      //Print de message in console
       Serial.println(theMessage);
       
-      if (theMessage.endsWith("lon"))
+      //Als message "on" is
+      if (theMessage.endsWith("on"))
       {
-        theMessage.remove(theMessage.length() - 3);
-        
-        //Led aan
+        //En de bestelLED nog niet aan stond
+        if (ledon == 0)
+        {
+          //Zet bestelLED aan
+          digitalWrite(4, HIGH);
+          delay(2000); //Debounce
+          ledon = 1;
+        }
+        //Anders zet bestelLED weer uit (bestelling afgerond)
+        else if (ledon == 1)
+        {
+          digitalWrite(4, LOW);
+          ledon = 0; 
+        }
       }
-      else if (theMessage.endsWith("loff"))
+      //Als message "uit" is, gaat hoofdpaneel uit en dus moet het bestelLED ook uit gaan
+      else if(theMessage.endsWith("uit"))
       {
-        theMessage.remove(theMessage.length() - 4);
-        
-        //Led uit
+        if (ledon == 1)
+        {
+          digitalWrite(4, LOW);
+          ledon = 0;
+        }
       }
-
+      
+      //Standaard is theMessage (string) leeg
       theMessage = "";
     }
   }
