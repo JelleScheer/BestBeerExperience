@@ -159,13 +159,10 @@ void loop(void)
         theMessage = "";
       }
     }
-   
+
     //Als er op de bierbestelknop is gedrukt
     if (verstuurBierBestelling == true)
-    {   
-      isBestellingGeplaatst = !isBestellingGeplaatst;
-      Serial.println(isBestellingGeplaatst);
-      
+    {
       //Switch de pipe naar transmitting
       radio.openWritingPipe(pipe);
 
@@ -180,15 +177,25 @@ void loop(void)
       //Switch de pipe weer terug naar receiving
       radio.openReadingPipe(1, pipe);
       radio.startListening();
-      
+
       drukSensorReadInt = drukSensorRead.toInt();
-      
+
       //Verhoog het aantal gedronken bier per filtje
-      if(!isBestellingGeplaatst)
+      if (!isBestellingGeplaatst)
       {
-        if( drukSensorReadInt >= 100 && drukSensorReadInt <= 250)
+        if ( drukSensorReadInt >= 100 && drukSensorReadInt <= 250)
         {
           aantalBierOp++;
+        }
+      }
+      else {
+        lcd.clear();
+        lcd.print("Bier is onderweg");
+        lcd.setCursor(0, 1);
+        lcd.print("moment geduld...");
+
+        while (isBestellingGeplaatst) {
+          delay(100);
         }
       }
     }
@@ -208,11 +215,8 @@ void loop(void)
       radio.openWritingPipe(pipe);
       sendStringToHoofdpaneel("suit");
     }
-
     delay(1000);
   }
-
-
 }
 
 void sendStringToHoofdpaneel(String message) {
@@ -245,7 +249,7 @@ void systeemAan() {
 //Interrupt van de uitknop
 void systeemUit() {
   systeemIsAan = false;
-  
+
   //Reset variabelen
   huidigScherm = 0;
   aantalBierOp = 0;
@@ -256,7 +260,7 @@ void systeemUit() {
 
 
 void debounceBestelInterrupt() {
-  if((long)(micros() - last_micros) >= debouncing_time * 1000) {
+  if ((long)(micros() - last_micros) >= debouncing_time * 1000) {
     bierBestel();
     last_micros = micros();
   }
@@ -264,13 +268,13 @@ void debounceBestelInterrupt() {
 
 //Interrupt van de bierbestelknop
 void bierBestel() {
-  verstuurBierBestelling = true;
+  verstuurBierBestelling = !verstuurBierBestelling;
+  isBestellingGeplaatst = !isBestellingGeplaatst;
 }
 
 void updateLCDScherm() {
   if (temperatuurSensorRead != "" && drukSensorRead != "")
   {
-
     lcd.clear();
 
     switch (huidigScherm) {
@@ -286,19 +290,19 @@ void updateLCDScherm() {
 
         temperatuurSensorReadInt = temperatuurSensorRead.toInt();
 
-        if (temperatuurSensorReadInt <= 0) 
+        if (temperatuurSensorReadInt <= 0)
         {
           lcd.print("bevroren");
-        } 
-        else if (temperatuurSensorReadInt >= 1 && temperatuurSensorReadInt <= 10) 
+        }
+        else if (temperatuurSensorReadInt >= 1 && temperatuurSensorReadInt <= 10)
         {
           lcd.print("perfecte temp.");
-        } 
-        else if (temperatuurSensorReadInt > 10 && temperatuurSensorReadInt <= 15) 
+        }
+        else if (temperatuurSensorReadInt > 10 && temperatuurSensorReadInt <= 15)
         {
           lcd.print("lauw");
-        } 
-        else 
+        }
+        else
         {
           lcd.print("te warm");
         }
@@ -310,19 +314,19 @@ void updateLCDScherm() {
 
         temperatuurSensorReadInt = temperatuurSensorRead.toInt();
 
-        if (temperatuurSensorReadInt <= 0) 
+        if (temperatuurSensorReadInt <= 0)
         {
           lcd.print("bier is te koud");
-        } 
-        else if (temperatuurSensorReadInt > 0 && temperatuurSensorReadInt <= 10) 
+        }
+        else if (temperatuurSensorReadInt > 0 && temperatuurSensorReadInt <= 10)
         {
           lcd.print("ultieme genot");
-        } 
-        else if (temperatuurSensorReadInt > 10 && temperatuurSensorReadInt <= 15) 
+        }
+        else if (temperatuurSensorReadInt > 10 && temperatuurSensorReadInt <= 15)
         {
           lcd.print("drink sneller");
-        } 
-        else 
+        }
+        else
         {
           lcd.print("bier is te warm");
         }
@@ -336,25 +340,25 @@ void updateLCDScherm() {
         break;
 
       case 4:
-        if (aantalBierOp < 2) 
+        if (aantalBierOp < 2)
         {
           lcd.print("Persoon 1 is");
           lcd.setCursor(0, 1);
           lcd.print("nuchter");
         }
-        else if (aantalBierOp >= 2 && aantalBierOp <= 7) 
+        else if (aantalBierOp >= 2 && aantalBierOp <= 7)
         {
           lcd.print("Persoon 1 is");
           lcd.setCursor(0, 1);
           lcd.print("aangeschoten");
         }
-        else if (aantalBierOp > 7 && aantalBierOp <= 15 ) 
+        else if (aantalBierOp > 7 && aantalBierOp <= 15 )
         {
           lcd.print("Persoon 1 is");
           lcd.setCursor(0, 1);
           lcd.print("dronken");
         }
-        else if (aantalBierOp > 15 ) 
+        else if (aantalBierOp > 15 )
         {
           lcd.print("Persoon 1 is in");
           lcd.setCursor(0, 1);
