@@ -56,7 +56,7 @@ int huidigScherm = 0;
 Timer t;
 
 //Debounce variabelen
-long debouncing_time = 15; //Debouncing Time in Milliseconds
+long debouncing_time = 100; //Debouncing Time in Milliseconds
 volatile unsigned long last_micros;
 
 void setup(void)
@@ -88,7 +88,7 @@ void setup(void)
   attachInterrupt(2, debounceBestelInterrupt, FALLING );
 
   //Activeer timer
-  t.every(1000, updateLCDScherm);
+  t.every(5000, updateLCDScherm);
 }
 
 void loop(void)
@@ -249,6 +249,7 @@ void systeemUit() {
   //Reset variabelen
   huidigScherm = 0;
   aantalBierOp = 0;
+  isBestellingGeplaatst = false;
   temperatuurSensorRead = "";
   drukSensorRead = "";
 }
@@ -285,7 +286,11 @@ void updateLCDScherm() {
 
         temperatuurSensorReadInt = temperatuurSensorRead.toInt();
 
-        if (temperatuurSensorReadInt <= 10) 
+        if (temperatuurSensorReadInt <= 0) 
+        {
+          lcd.print("bevroren");
+        } 
+        else if (temperatuurSensorReadInt >= 1 && temperatuurSensorReadInt <= 10) 
         {
           lcd.print("perfecte temp.");
         } 
@@ -295,7 +300,7 @@ void updateLCDScherm() {
         } 
         else 
         {
-          lcd.print("warm");
+          lcd.print("te warm");
         }
         break;
 
@@ -305,9 +310,13 @@ void updateLCDScherm() {
 
         temperatuurSensorReadInt = temperatuurSensorRead.toInt();
 
-        if (temperatuurSensorReadInt <= 10) 
+        if (temperatuurSensorReadInt <= 0) 
         {
-          lcd.print("kan genieten");
+          lcd.print("bier is te koud");
+        } 
+        else if (temperatuurSensorReadInt > 0 && temperatuurSensorReadInt <= 10) 
+        {
+          lcd.print("ultieme genot");
         } 
         else if (temperatuurSensorReadInt > 10 && temperatuurSensorReadInt <= 15) 
         {
