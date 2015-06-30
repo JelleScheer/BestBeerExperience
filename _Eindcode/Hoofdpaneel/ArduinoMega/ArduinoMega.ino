@@ -56,7 +56,7 @@ int huidigScherm = 0;
 Timer t;
 
 //Debounce variabelen
-long debouncing_time = 100; //Debouncing Time in Milliseconds
+long debouncing_time = 500; //Debouncing Time in Milliseconds
 volatile unsigned long last_micros;
 
 void setup(void)
@@ -163,39 +163,42 @@ void loop(void)
     //Als er op de bierbestelknop is gedrukt
     if (verstuurBierBestelling == true)
     {
-      //Switch de pipe naar transmitting
-      radio.openWritingPipe(pipe);
-
-      Serial.println("Swtiching to transmitting. . .");
-
-      //Reset bier bestel boolean
-      verstuurBierBestelling = false;
-
-      //Stuur bericht naar KeukenArduino dat bestelLED aan moet gaan
-      sendStringToHoofdpaneel(String("lon"));
-
-      //Switch de pipe weer terug naar receiving
-      radio.openReadingPipe(1, pipe);
-      radio.startListening();
-
-      drukSensorReadInt = drukSensorRead.toInt();
-
-      //Verhoog het aantal gedronken bier per filtje
-      if (!isBestellingGeplaatst)
+      if (radio.available())
       {
-        if ( drukSensorReadInt >= 100 && drukSensorReadInt <= 250)
-        {
-          aantalBierOp++;
-        }
-      }
-      else {
-        lcd.clear();
-        lcd.print("Bier is onderweg");
-        lcd.setCursor(0, 1);
-        lcd.print("moment geduld...");
+        //Switch de pipe naar transmitting
+        radio.openWritingPipe(pipe);
 
-        while (isBestellingGeplaatst) {
-          delay(100);
+        Serial.println("Swtiching to transmitting. . .");
+
+        //Reset bier bestel boolean
+        verstuurBierBestelling = false;
+
+        //Stuur bericht naar KeukenArduino dat bestelLED aan moet gaan
+        sendStringToHoofdpaneel(String("lon"));
+
+        //Switch de pipe weer terug naar receiving
+        radio.openReadingPipe(1, pipe);
+        radio.startListening();
+
+        drukSensorReadInt = drukSensorRead.toInt();
+
+        //Verhoog het aantal gedronken bier per filtje
+        if (!isBestellingGeplaatst)
+        {
+          if ( drukSensorReadInt >= 100 && drukSensorReadInt <= 250)
+          {
+            aantalBierOp++;
+          }
+        }
+        else {
+          lcd.clear();
+          lcd.print("Bier is onderweg");
+          lcd.setCursor(0, 1);
+          lcd.print("moment geduld...");
+
+          while (isBestellingGeplaatst) {
+            delay(100);
+          }
         }
       }
     }
@@ -309,26 +312,31 @@ void updateLCDScherm() {
         break;
 
       case 2:
-        lcd.print("Bierfiltje 1");
-        lcd.setCursor(0, 1);
-
         temperatuurSensorReadInt = temperatuurSensorRead.toInt();
 
         if (temperatuurSensorReadInt <= 0)
         {
-          lcd.print("bier is te koud");
+          lcd.print("Bierfiltje 1 kan");
+          lcd.setCursor(0, 1);
+          lcd.print("rustig aan doen");
         }
         else if (temperatuurSensorReadInt > 0 && temperatuurSensorReadInt <= 10)
         {
-          lcd.print("ultieme genot");
+          lcd.print("Bierfiltje 1 kan");
+          lcd.setCursor(0, 1);
+          lcd.print("nu genieten");
         }
         else if (temperatuurSensorReadInt > 10 && temperatuurSensorReadInt <= 15)
         {
-          lcd.print("drink sneller");
+          lcd.print("Bierfiltje 1");
+          lcd.setCursor(0, 1);
+          lcd.print("moet doordrinken");
         }
         else
         {
-          lcd.print("bier is te warm");
+          lcd.print("Bierfiltje 1 is");
+          lcd.setCursor(0, 1);
+          lcd.print("verpest");
         }
         break;
 
