@@ -6,6 +6,9 @@
 #include <DallasTemperature.h>
 #include<stdlib.h>
 
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
+
 // include neopixel library:
 #include <Adafruit_NeoPixel.h>
 #include <avr/power.h>
@@ -17,8 +20,8 @@
 #define DRUKSENSORPINPUT 0
 
 // Define NeoPixel requirements
-#define PIN            6
-#define NUMPIXELS      30
+#define PIXEL_PIN      6
+#define PIXEL_COUNT    30
 
 // Setup a oneWire instance to communicate with any OneWire devices
 // (not just Maxim/Dallas temperature ICs)
@@ -28,92 +31,107 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // Initialise RGBStrip
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800); 
-int delayval = 1; // delay for half a second
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-/* Radio pinnen Mega
- * CSN - D10
- * MI - D12
- * MO - D11
- * SCK - D13
- * CE - D9
- * VCC - 3.3V
- * IRQ - niet gebruikt
- */
-
-//Initialiseer radio
 int msg[1];
 RF24 radio(9, 10);
 const uint64_t pipe = 0xE8E8F0F0E1LL;
 
-//Boolean om tussen temperatuur en druk te wisselen
+int checkColor = 0;
+
 boolean wisseldata = false;
 
 void setup(void)
 {
-  //Begin serial op baudrate 9600
   Serial.begin(9600);
-  
-  //Start radio op transmitting pipe
   radio.begin();
   radio.openWritingPipe(pipe);
 
-  // Start temperatuursensor
+  // Start up the temperature library
   sensors.begin();
   
-  // Start rgbstrip
-  pixels.begin();
+  // Start up RGBStrip
+  strip.begin();
+  strip.show();
+  rainbow(20);
 }
 
 void loop(void)
 {
-  //Wisselt constant tussen temperatuur en druk, en stuurt deze op naar het hoofdpaneel
   if(wisseldata){
-    //Vraag temperatuur op
-    sensors.requestTemperatures();
-    //Stuur de temperatuur op met een "t" op het einde (als indicatie voor hoofdpaneel dat het om de temperatuur gaat)
+    sensors.requestTemperatures(); // Send the command to get temperatures
     sendStringToHoofdpaneel(String(sensors.getTempCByIndex(0)) + "t");
   }
   else{
-    //Stuur de druk op met een "d" op het einde (als indicatie voor hoofdpaneel dat het om de druk gaat)
     sendStringToHoofdpaneel(String(analogRead(DRUKSENSORPINPUT)) + "d"); 
   }
   
-  //Gebruik de opgehaalde temperatuur om op de RGBStrip de juiste kleur te laten zien
-  for(int i=0;i<NUMPIXELS;i++)
+  if(checkColor == 5)
   {
-    //Als de temperatuur onder de 10 graden is
-    if(sensors.getTempCByIndex(0) < 10)
-    {
-      //Zet de RGBStrip op de kleur groen
-      pixels.setPixelColor(i, pixels.Color(101,211,245));
-      pixels.show();
-      delay(delayval);
-    }
-    //Als de temperatuur tussen de 10 en 15 graden is
-    else if(sensors.getTempCByIndex(0) > 10 && sensors.getTempCByIndex(0) < 15)
-    {
-      //Zet de RGBStrip op de kleur oranje
-      pixels.setPixelColor(i, pixels.Color(229,144,32));
-      pixels.show();
-      delay(delayval);
-    }
-    else 
-    //Als de temperatuur hoger is dan 15 graden
-    {
-      //Zet de RGBStrip op de kleur rood
-      pixels.setPixelColor(i, pixels.Color(201,68,28));
-      pixels.show();
-      delay(delayval);
-    }
+    //SLAAPMODUS
+    //if(analogRead(DRUKSENSORPINPUT) > 500)
+    //  {
+    //    colorWipe(strip.Color(0, 0, 255), 50); //Blue
+    //    delay(1000);
+    //    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    //    sleep_enable();
+    //    sleep_mode();
+    //  }
+    if(sensors.getTempCByIndex(0) < 23)
+      {
+        colorWipe(strip.Color(0, 0, 255), 50); //Blue
+      }
+      else if(sensors.getTempCByIndex(0) > 23 && sensors.getTempCByIndex(0) < 28)
+      {
+        colorWipe(strip.Color(227, 145, 14), 50); // Orange
+      }
+      else 
+      {
+        colorWipe (strip.Color(194,13,10), 50); // Red
+      }
+      
+      checkColor = 0;
   }
-  
-  wisseldata = !wisseldata;
+    
+    checkColor = checkColor + 1;
+    
+    wisseldata = !wisseldata;
+}
+
+void colorWipe(uint32_t c, uint8_t) {
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, c);
+      strip.show();
+  }
+}
+
+void rainbow(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256; j++) {
+    for(i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, Wheel((i+j) & 255));
+    }
+    strip.show();
+    delay(wait);
+  }
+}
+
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+   return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  } else if(WheelPos < 170) {
+    WheelPos -= 85;
+   return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  } else {
+   WheelPos -= 170;
+   return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+  }
 }
 
 void sendStringToHoofdpaneel(String message){
-  
-  //Haal de message op die verstuurd moet worden, en converteer deze
+
   for (int i = 0; i < message.length(); i++)
   {
     int charToSend[1];
@@ -123,11 +141,16 @@ void sendStringToHoofdpaneel(String message){
   }
   Serial.println("");
   
-  //Verstuur het bericht en stuur de "terminate string"
+  //send the 'terminate string' value...
   msg[0] = 2;
   radio.write(msg, 1);
 
-  //Zet radio even uit om noise te voorkomen
+  /*delay sending for a short period of time.  radio.powerDown()/radio.powerupp
+  //with a delay in between have worked well for this purpose(just using delay seems to
+  //interrupt the transmission start). However, this method could still be improved
+  as I still get the first character 'cut-off' sometimes. I have a 'checksum' function
+  on the receiver to verify the message was successfully sent.
+  */
   radio.powerDown();
   delay(1000);
   radio.powerUp();
